@@ -144,136 +144,118 @@ export const PublicTicketPage: React.FC = () => {
 
         {/* Main Ticket Form Card */}
         <div className="w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-slate-200/90 overflow-hidden text-slate-800">
-        <div className="bg-gradient-to-r from-c3con-dark-900 to-c3con-dark-800 px-6 py-4 text-white flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-c3con-gold-400"></span>
-            <span className="text-xs font-semibold tracking-wider uppercase text-slate-200">
-              Abertura de Chamado
+          <div className="bg-gradient-to-r from-c3con-dark-900 to-c3con-dark-800 px-6 py-4 text-white flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-c3con-gold-400"></span>
+              <span className="text-xs font-semibold tracking-wider uppercase text-slate-200">
+                Abertura de Chamado
+              </span>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6">
+            {errorMessage && (
+              <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-start gap-3 animate-in fade-in">
+                <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold">Não foi possível enviar o chamado</p>
+                  <p className="text-xs text-rose-700 mt-0.5">{errorMessage}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Honeypot anti-spam field (hidden) */}
+            <div className="hidden" aria-hidden="true">
+              <label htmlFor="website_hp">Não preencha este campo:</label>
+              <input
+                type="text"
+                id="website_hp"
+                name="website_hp"
+                tabIndex={-1}
+                autoComplete="off"
+                value={honeypot}
+                onChange={(e) => setHoneypot(e.target.value)}
+              />
+            </div>
+
+            {/* Application Selection */}
+            <div className="space-y-1.5">
+              <Select
+                label="Qual solução ou sistema você está utilizando?"
+                required
+                value={applicationId}
+                onChange={(e) => setApplicationId(e.target.value)}
+                disabled={loadingApps || applications.length === 0}
+              >
+                {loadingApps ? (
+                  <option value="">Carregando sistemas...</option>
+                ) : applications.length === 0 ? (
+                  <option value="">Nenhum sistema disponível</option>
+                ) : (
+                  applications.map((app) => (
+                    <option key={app.id} value={app.id}>
+                      {app.name} {app.description ? `— ${app.description}` : ''}
+                    </option>
+                  ))
+                )}
+              </Select>
+            </div>
+
+            {/* Requester Name */}
+            <Input
+              label="Seu Nome"
+              placeholder="Ex: João da Silva"
+              required
+              value={requesterName}
+              onChange={(e) => setRequesterName(e.target.value)}
+            />
+
+            {/* Requester Contact */}
+            <Input
+              label="Contato (E-mail ou Telefone/WhatsApp)"
+              placeholder="Ex: joao@empresa.com ou (11) 98765-4321"
+              helperText="Opcional. Usado caso nossa equipe precise de esclarecimentos adicionais."
+              value={requesterContact}
+              onChange={(e) => setRequesterContact(e.target.value)}
+            />
+
+            {/* Description */}
+            <div className="space-y-1.5">
+              <label htmlFor="ticket-description" className="block text-xs font-semibold text-slate-700">
+                Descrição do Problema ou Sugestão de melhoria <span className="text-rose-500">*</span>
+              </label>
+              <textarea
+                id="ticket-description"
+                rows={5}
+                required
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Descreva detalhadamente o que aconteceu, passos para reproduzir ou o que gostaria de sugerir..."
+                className="w-full px-3.5 py-2.5 text-sm bg-white border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-c3con-gold-400 focus:border-transparent transition-colors resize-y min-h-[120px]"
+              />
+            </div>
+
+            {/* Submit button */}
+            <div className="pt-2">
+              <Button
+                type="submit"
+                size="lg"
+                variant="primary"
+                className="w-full shadow-md font-semibold tracking-wide"
+                isLoading={submitting}
+                rightIcon={<Send className="w-4 h-4" />}
+              >
+                {submitting ? 'Registrando chamado...' : 'Enviar Solicitação de Suporte'}
+              </Button>
+            </div>
+          </form>
+
+          <div className="bg-slate-50 px-6 py-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+            <span className="flex items-center gap-1.5">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" /> O protocolo será gerado automaticamente
             </span>
           </div>
-          <span className="text-xs text-c3con-gold-300 font-medium">Sem necessidade de cadastro</span>
         </div>
-
-        <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6">
-          {errorMessage && (
-            <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-start gap-3 animate-in fade-in">
-              <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-              <div>
-                <p className="font-semibold">Não foi possível enviar o chamado</p>
-                <p className="text-xs text-rose-700 mt-0.5">{errorMessage}</p>
-              </div>
-            </div>
-          )}
-
-          {/* Honeypot anti-spam field (hidden) */}
-          <div className="hidden" aria-hidden="true">
-            <label htmlFor="website_hp">Não preencha este campo:</label>
-            <input
-              type="text"
-              id="website_hp"
-              name="website_hp"
-              tabIndex={-1}
-              autoComplete="off"
-              value={honeypot}
-              onChange={(e) => setHoneypot(e.target.value)}
-            />
-          </div>
-
-          {/* Application Selection */}
-          <div className="space-y-1.5">
-            <Select
-              label="Qual solução ou sistema você está utilizando?"
-              required
-              value={applicationId}
-              onChange={(e) => setApplicationId(e.target.value)}
-              disabled={loadingApps || applications.length === 0}
-            >
-              {loadingApps ? (
-                <option value="">Carregando sistemas...</option>
-              ) : applications.length === 0 ? (
-                <option value="">Nenhum sistema disponível</option>
-              ) : (
-                applications.map((app) => (
-                  <option key={app.id} value={app.id}>
-                    {app.name} {app.description ? `— ${app.description}` : ''}
-                  </option>
-                ))
-              )}
-            </Select>
-            <p className="text-xs text-slate-500">
-              Selecione o software onde ocorreu o problema ou para o qual deseja a melhoria.
-            </p>
-          </div>
-
-          {/* Requester Name */}
-          <Input
-            label="Seu Nome Completo"
-            placeholder="Ex: João da Silva"
-            required
-            value={requesterName}
-            onChange={(e) => setRequesterName(e.target.value)}
-          />
-
-          {/* Requester Contact */}
-          <Input
-            label="Seu Contato (E-mail ou Telefone/WhatsApp)"
-            placeholder="Ex: joao@empresa.com ou (11) 98765-4321"
-            helperText="Opcional. Usado caso nossa equipe precise de esclarecimentos adicionais."
-            value={requesterContact}
-            onChange={(e) => setRequesterContact(e.target.value)}
-          />
-
-          {/* Description */}
-          <div className="space-y-1.5">
-            <label htmlFor="ticket-description" className="block text-xs font-semibold text-slate-700">
-              Descrição do Problema ou Sugestão <span className="text-rose-500">*</span>
-            </label>
-            <textarea
-              id="ticket-description"
-              rows={5}
-              required
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Descreva detalhadamente o que aconteceu, passos para reproduzir ou o que gostaria de sugerir..."
-              className="w-full px-3.5 py-2.5 text-sm bg-white border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-c3con-gold-400 focus:border-transparent transition-colors resize-y min-h-[120px]"
-            />
-            <p className="text-xs text-slate-400">
-              Quanto mais detalhes nos fornecer (telas envolvidas, dados digitados), mais rápido poderemos resolver.
-            </p>
-          </div>
-
-          {/* Submit button */}
-          <div className="pt-2">
-            <Button
-              type="submit"
-              size="lg"
-              variant="primary"
-              className="w-full shadow-md font-semibold tracking-wide"
-              isLoading={submitting}
-              rightIcon={<Send className="w-4 h-4" />}
-            >
-              {submitting ? 'Registrando chamado...' : 'Enviar Solicitação de Suporte'}
-            </Button>
-          </div>
-        </form>
-
-        <div className="bg-slate-50 px-6 py-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-          <span className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Protocolo gerado automaticamente
-          </span>
-          <a
-            href="/login"
-            className="text-c3con-gold-700 font-medium hover:underline hover:text-c3con-gold-800"
-          >
-            Acesso da Equipe &rarr;
-          </a>
-        </div>
-      </div>
-
-      {/* Footer info */}
-      <footer className="mt-8 text-center text-xs text-slate-400">
-        &copy; {new Date().getFullYear()} C3con Engenharia &amp; Soluções em Software. Todos os direitos reservados.
-      </footer>
       </div>
     </div>
   );

@@ -17,8 +17,8 @@ export const STATUS_CONFIG: Record<
     border: 'border-blue-200',
     dot: 'bg-blue-500',
   },
-  triagem: {
-    label: 'Em Triagem',
+  assinado: {
+    label: 'Assinado',
     bg: 'bg-purple-50',
     text: 'text-purple-700',
     border: 'border-purple-200',
@@ -132,12 +132,30 @@ export function formatDate(dateString: string | null | undefined): string {
 
 export function formatDateShort(dateString: string | null | undefined): string {
   if (!dateString) return '-';
+  // Directly parse YYYY-MM-DD to avoid timezone offset shifts (fixes D-1 issue)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    const [year, month, day] = dateString.split('-');
+    return `${day}/${month}/${year}`;
+  }
   const date = new Date(dateString);
   return new Intl.DateTimeFormat('pt-BR', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
   }).format(date);
+}
+
+export function formatMinutesToDuration(minutes: number | null | undefined): string {
+  if (minutes == null || isNaN(minutes)) return '-';
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  if (hours < 24) {
+    return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
+  }
+  const days = Math.floor(hours / 24);
+  const remainingHours = hours % 24;
+  return remainingHours > 0 ? `${days}d ${remainingHours}h` : `${days}d`;
 }
 
 export function timeAgo(dateString: string | null | undefined): string {

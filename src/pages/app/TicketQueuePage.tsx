@@ -12,6 +12,7 @@ import {
   TYPE_CONFIG,
   formatDate,
   timeAgo,
+  formatMinutesToDuration,
 } from '../../lib/utils';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
@@ -120,11 +121,11 @@ export const TicketQueuePage: React.FC = () => {
   // Metrics counters
   const metrics = useMemo(() => {
     const novos = tickets.filter((t) => t.status === 'novo').length;
-    const emTriagem = tickets.filter((t) => t.status === 'triagem').length;
+    const assinados = tickets.filter((t) => t.status === 'assinado').length;
     const emAndamento = tickets.filter((t) => t.status === 'em_andamento').length;
     const aguardando = tickets.filter((t) => t.status === 'aguardando_cliente').length;
     const resolvidos = tickets.filter((t) => t.status === 'resolvido' || t.status === 'fechado').length;
-    return { novos, emTriagem, emAndamento, aguardando, resolvidos, total: tickets.length };
+    return { novos, assinados, emAndamento, aguardando, resolvidos, total: tickets.length };
   }, [tickets]);
 
   return (
@@ -179,26 +180,26 @@ export const TicketQueuePage: React.FC = () => {
           </p>
         </div>
 
-        {/* Em Triagem */}
+        {/* Assinados */}
         <div
-          onClick={() => setSelectedStatus(selectedStatus === 'triagem' ? 'all' : 'triagem')}
-          className={`p-4 rounded-xl border transition-all cursor-pointer ${selectedStatus === 'triagem'
+          onClick={() => setSelectedStatus(selectedStatus === 'assinado' ? 'all' : 'assinado')}
+          className={`p-4 rounded-xl border transition-all cursor-pointer ${selectedStatus === 'assinado'
             ? 'bg-purple-600 text-white border-purple-600 shadow-md ring-2 ring-purple-300'
             : 'bg-white text-slate-800 border-slate-200 hover:border-purple-300 hover:shadow-sm'
             }`}
         >
           <span
-            className={`text-xs font-semibold uppercase tracking-wider ${selectedStatus === 'triagem' ? 'text-purple-100' : 'text-purple-600'
+            className={`text-xs font-semibold uppercase tracking-wider ${selectedStatus === 'assinado' ? 'text-purple-100' : 'text-purple-600'
               }`}
           >
-            Em Triagem
+            Assinados
           </span>
-          <div className="text-2xl font-bold mt-2">{metrics.emTriagem}</div>
+          <div className="text-2xl font-bold mt-2">{metrics.assinados}</div>
           <p
-            className={`text-[11px] mt-1 ${selectedStatus === 'triagem' ? 'text-purple-100' : 'text-slate-400'
+            className={`text-[11px] mt-1 ${selectedStatus === 'assinado' ? 'text-purple-100' : 'text-slate-400'
               }`}
           >
-            Em análise pela equipe
+            Triados e com responsável
           </p>
         </div>
 
@@ -348,8 +349,8 @@ export const TicketQueuePage: React.FC = () => {
               className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:ring-1 focus:ring-c3con-gold-400"
             >
               <option value="all">Todos os Status</option>
-              <option value="novo">Novo (Aguardando)</option>
-              <option value="triagem">Em Triagem</option>
+              <option value="novo">Novo</option>
+              <option value="assinado">Assinado</option>
               <option value="em_andamento">Em Andamento</option>
               <option value="aguardando_cliente">Aguardando Cliente</option>
               <option value="resolvido">Resolvido</option>
@@ -529,11 +530,16 @@ export const TicketQueuePage: React.FC = () => {
                         )}
                       </td>
 
-                      {/* Aberto */}
+                      {/* Aberto & Resolução */}
                       <td className="py-3.5 px-4 whitespace-nowrap text-right text-xs text-slate-400">
-                        <span title={formatDate(ticket.created_at)}>
+                        <div title={formatDate(ticket.created_at)}>
                           {timeAgo(ticket.created_at)}
-                        </span>
+                        </div>
+                        {ticket.resolution_time_minutes != null && (
+                          <div className="text-[10px] text-emerald-600 font-medium mt-0.5" title="Tempo total até conclusão">
+                            {formatMinutesToDuration(ticket.resolution_time_minutes)}
+                          </div>
+                        )}
                       </td>
                     </tr>
                   );

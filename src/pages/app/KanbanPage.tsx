@@ -305,7 +305,7 @@ export const KanbanPage: React.FC = () => {
               return (
                 <div
                   key={column.id}
-                  className="w-80 shrink-0 bg-slate-100/90 rounded-2xl border border-slate-200 flex flex-col max-h-[calc(100vh-240px)] shadow-sm"
+                  className="w-80 shrink-0 bg-slate-100/90 rounded-2xl border border-slate-200 flex flex-col h-fit shadow-sm"
                 >
                   {/* Column Header */}
                   <div className="p-3.5 border-b border-slate-200/80 flex items-center justify-between bg-white/60 rounded-t-2xl">
@@ -337,7 +337,7 @@ export const KanbanPage: React.FC = () => {
                       <div
                         ref={provided.innerRef}
                         {...provided.droppableProps}
-                        className={`p-3 flex-1 overflow-y-auto space-y-2.5 min-h-[100px] transition-colors rounded-b-2xl ${
+                        className={`p-3 flex-1 space-y-2.5 min-h-[100px] transition-colors rounded-b-2xl ${
                           snapshot.isDraggingOver ? 'bg-c3con-gold-50/50' : ''
                         }`}
                       >

@@ -16,6 +16,7 @@ import {
   PRIORITY_CONFIG,
   formatDate,
   timeAgo,
+  formatMinutesToDuration,
 } from '../../lib/utils';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
@@ -33,18 +34,28 @@ import {
   AlertCircle,
   Shield,
   Layers,
+  Edit2,
+  Lock,
+  Save,
+  X,
 } from 'lucide-react';
 
 export const TicketDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
 
   const [ticket, setTicket] = useState<TicketWithDetails | null>(null);
   const [comments, setComments] = useState<(TicketComment & { author?: Profile })[]>([]);
   const [history, setHistory] = useState<(TicketStatusHistory & { changer?: Profile })[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Admin editable requester info states
+  const [isEditingRequester, setIsEditingRequester] = useState(false);
+  const [editRequesterName, setEditRequesterName] = useState('');
+  const [editRequesterContact, setEditRequesterContact] = useState('');
+  const [savingRequester, setSavingRequester] = useState(false);
 
   // Form states for triage & update
   const [status, setStatus] = useState<TicketStatus>('novo');
@@ -91,6 +102,9 @@ export const TicketDetailPage: React.FC = () => {
       setType(ticketData.type || '');
       setAssignedTo(ticketData.assigned_to || '');
       setTaskTitle(`Atender ${ticketData.protocol}: ${ticketData.requester_name}`);
+
+      setEditRequesterName(ticketData.requester_name || '');
+      setEditRequesterContact(ticketData.requester_contact || '');
 
       // 2. Fetch Profiles for assignment
       const { data: profData } = await supabase
@@ -139,6 +153,34 @@ export const TicketDetailPage: React.FC = () => {
     loadTicketData();
   }, [id, user]);
 
+  // Handle saving requester info (Admin only)
+  const handleSaveRequesterInfo = async () => {
+    if (!ticket || !editRequesterName.trim()) return;
+    setSavingRequester(true);
+    setSuccessNotice(null);
+
+    try {
+      const { error } = await supabase
+        .from('tickets')
+        .update({
+          requester_name: editRequesterName.trim(),
+          requester_contact: editRequesterContact.trim() || null,
+        })
+        .eq('id', ticket.id);
+
+      if (error) throw error;
+
+      setSuccessNotice('Dados do solicitante atualizados com sucesso pelo Administrador!');
+      setIsEditingRequester(false);
+      setTimeout(() => setSuccessNotice(null), 3000);
+      await loadTicketData();
+    } catch (err: any) {
+      alert(`Erro ao atualizar solicitante: ${err.message}`);
+    } finally {
+      setSavingRequester(false);
+    }
+  };
+
   // Handle saving triage changes
   const handleSaveTriage = async () => {
     if (!ticket) return;
@@ -146,11 +188,11 @@ export const TicketDetailPage: React.FC = () => {
     setSuccessNotice(null);
 
     try {
-      // If moving out of 'novo' without explicitly choosing status, set to 'triagem'
+      // If moving out of 'novo' or assigned to an agent, automatically set to 'assinado'
       let nextStatus = status;
-      if (status === 'novo' && (priority || type || assignedTo)) {
-        nextStatus = 'triagem';
-        setStatus('triagem');
+      if (status === 'novo' && (assignedTo || priority || type)) {
+        nextStatus = 'assinado';
+        setStatus('assinado');
       }
 
       const { error } = await supabase
@@ -289,6 +331,12 @@ export const TicketDetailPage: React.FC = () => {
                   Prioridade: {priorityInfo.label}
                 </Badge>
               )}
+              {ticket.resolution_time_minutes != null && (
+                <Badge className="bg-emerald-50 text-emerald-800 border-emerald-200 flex items-center gap-1 font-medium">
+                  <Clock className="w-3 h-3 text-emerald-600" />
+                  Concluído em: {formatMinutesToDuration(ticket.resolution_time_minutes)}
+                </Badge>
+              )}
             </div>
             <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-2">
               <span>Aberto {timeAgo(ticket.created_at)}</span>
@@ -323,37 +371,113 @@ export const TicketDetailPage: React.FC = () => {
         <div className="lg:col-span-2 space-y-6">
           {/* Ticket Original Request Card */}
           <Card>
-            <CardHeader className="bg-slate-50/70">
+            <CardHeader className="bg-slate-50/70 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Layers className="w-4 h-4 text-c3con-gold-600" />
                 <CardTitle className="text-sm">Solicitação Original do Cliente</CardTitle>
               </div>
-              <span className="text-xs font-medium px-2.5 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700">
-                {ticket.application?.name || 'Aplicação'}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium px-2.5 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700">
+                  {ticket.application?.name || 'Aplicação'}
+                </span>
+                {isAdmin && !isEditingRequester && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsEditingRequester(true)}
+                    className="text-xs text-c3con-gold-700 hover:text-c3con-gold-900 flex items-center gap-1 py-1 px-2.5 bg-white border border-slate-200 hover:bg-slate-50 shadow-xs"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                    <span>Editar Solicitante</span>
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardBody className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-4 border-b border-slate-100 text-xs">
-                <div>
-                  <span className="text-slate-400 block font-medium">Nome do Solicitante:</span>
-                  <span className="text-slate-800 font-semibold text-sm">
-                    {ticket.requester_name}
-                  </span>
+              {isEditingRequester ? (
+                <div className="p-4 rounded-xl bg-amber-50/60 border border-amber-200/80 space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-amber-200/50">
+                    <span className="text-xs font-semibold text-amber-900 flex items-center gap-1.5">
+                      <Shield className="w-3.5 h-3.5 text-c3con-gold-600" />
+                      Alterar Dados do Solicitante (Apenas Administrador)
+                    </span>
+                    <button
+                      onClick={() => {
+                        setEditRequesterName(ticket.requester_name);
+                        setEditRequesterContact(ticket.requester_contact || '');
+                        setIsEditingRequester(false);
+                      }}
+                      className="text-slate-400 hover:text-slate-600 p-1 rounded"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <Input
+                      label="Nome do Solicitante"
+                      required
+                      value={editRequesterName}
+                      onChange={(e) => setEditRequesterName(e.target.value)}
+                    />
+                    <Input
+                      label="Contato Informado"
+                      placeholder="E-mail ou telefone"
+                      value={editRequesterContact}
+                      onChange={(e) => setEditRequesterContact(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setEditRequesterName(ticket.requester_name);
+                        setEditRequesterContact(ticket.requester_contact || '');
+                        setIsEditingRequester(false);
+                      }}
+                      disabled={savingRequester}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={handleSaveRequesterInfo}
+                      isLoading={savingRequester}
+                      leftIcon={<Save className="w-3.5 h-3.5" />}
+                    >
+                      Salvar Alterações
+                    </Button>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-slate-400 block font-medium">Contato Informado:</span>
-                  <span className="text-slate-800 font-medium">
-                    {ticket.requester_contact || (
-                      <span className="text-slate-400 italic">Não informado</span>
-                    )}
-                  </span>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-4 border-b border-slate-100 text-xs">
+                  <div>
+                    <span className="text-slate-400 block font-medium">Nome do Solicitante:</span>
+                    <span className="text-slate-800 font-semibold text-sm">
+                      {ticket.requester_name}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block font-medium">Contato Informado:</span>
+                    <span className="text-slate-800 font-medium">
+                      {ticket.requester_contact || (
+                        <span className="text-slate-400 italic">Não informado</span>
+                      )}
+                    </span>
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div>
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-2">
-                  Descrição do Problema / Solicitação
-                </span>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
+                    Descrição do Problema / Solicitação
+                  </span>
+                  <span className="text-[11px] text-slate-400 flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded font-medium">
+                    <Lock className="w-3 h-3 text-slate-400" /> Descrição original (somente leitura)
+                  </span>
+                </div>
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/80 text-sm text-slate-800 leading-relaxed whitespace-pre-wrap font-sans">
                   {ticket.description}
                 </div>
@@ -503,8 +627,8 @@ export const TicketDetailPage: React.FC = () => {
                   onChange={(e) => setStatus(e.target.value as TicketStatus)}
                   className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-c3con-gold-400"
                 >
-                  <option value="novo">Novo (Aguardando Triagem)</option>
-                  <option value="triagem">Em Triagem</option>
+                  <option value="novo">Novo</option>
+                  <option value="assinado">Assinado</option>
                   <option value="em_andamento">Em Andamento</option>
                   <option value="aguardando_cliente">Aguardando Cliente</option>
                   <option value="resolvido">Resolvido</option>

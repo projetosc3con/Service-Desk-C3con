@@ -14,6 +14,7 @@ import { TicketDetailPage } from './pages/app/TicketDetailPage';
 import { KanbanPage } from './pages/app/KanbanPage';
 import { ApplicationsAdminPage } from './pages/app/ApplicationsAdminPage';
 import { TeamAdminPage } from './pages/app/TeamAdminPage';
+import { SlaAdminPage } from './pages/app/SlaAdminPage';
 
 export const App: React.FC = () => {
   return (
@@ -42,6 +43,14 @@ export const App: React.FC = () => {
             <Route path="kanban" element={<KanbanPage />} />
 
             {/* Admin-only Routes */}
+            <Route
+              path="sla"
+              element={
+                <ProtectedRoute requireAdmin>
+                  <SlaAdminPage />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="aplicacoes"
               element={

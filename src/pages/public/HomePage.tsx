@@ -1,10 +1,22 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
-import { STATUS_CONFIG, formatDateShort } from '../../lib/utils';
-import type { TicketStatus } from '../../types/database.types';
+import {
+  STATUS_CONFIG,
+  formatDate,
+  formatMinutesToDuration,
+} from '../../lib/utils';
+import type { TicketStatus, TicketPriority } from '../../types/database.types';
 import { Badge } from '../../components/ui/Badge';
-import { Search, PlusCircle, Clock, AlertCircle, Sparkles } from 'lucide-react';
+import {
+  Search,
+  PlusCircle,
+  Clock,
+  AlertCircle,
+  Sparkles,
+  User,
+  CheckCircle2,
+} from 'lucide-react';
 
 interface SearchedTicketResult {
   protocol: string;
@@ -12,6 +24,13 @@ interface SearchedTicketResult {
   created_at: string;
   updated_at: string;
   application_name: string | null;
+  requester_name: string;
+  description: string;
+  priority: TicketPriority | null;
+  avg_time_hours: number | null;
+  max_time_hours: number | null;
+  expected_resolution_at: string | null;
+  resolution_time_minutes: number | null;
 }
 
 export const HomePage: React.FC = () => {
@@ -108,18 +127,12 @@ export const HomePage: React.FC = () => {
         {searched && (
           <div className="w-full mb-8 animate-in fade-in zoom-in-95 duration-200">
             {ticketResult ? (
-              <div className="p-5 bg-slate-900/80 border border-c3con-gold-500/30 rounded-2xl text-left shadow-lg backdrop-blur-sm">
-                <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-3 mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-base font-bold text-c3con-gold-400 tracking-wider">
-                      {ticketResult.protocol}
-                    </span>
-                    {ticketResult.application_name && (
-                      <span className="text-[11px] px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700">
-                        {ticketResult.application_name}
-                      </span>
-                    )}
-                  </div>
+              <div className="p-5 sm:p-6 bg-slate-900/90 border border-c3con-gold-500/30 rounded-2xl text-left shadow-2xl backdrop-blur-md space-y-4">
+                {/* Header: Protocol + Status (System badge removed as requested) */}
+                <div className="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
+                  <span className="font-mono text-base sm:text-lg font-bold text-c3con-gold-400 tracking-wider">
+                    {ticketResult.protocol}
+                  </span>
                   {(() => {
                     const statusInfo = STATUS_CONFIG[ticketResult.status];
                     return (
@@ -133,14 +146,72 @@ export const HomePage: React.FC = () => {
                     );
                   })()}
                 </div>
-                <div className="grid grid-cols-2 gap-3 text-xs text-slate-400">
+
+                {/* Requester & SLA Expected Resolution */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-950/60 p-3.5 rounded-xl border border-slate-800/80">
+                  <div>
+                    <span className="text-slate-500 block text-[11px] uppercase tracking-wider font-semibold">
+                      Solicitante
+                    </span>
+                    <span className="text-slate-200 font-medium text-xs sm:text-sm flex items-center gap-1.5 mt-1">
+                      <User className="w-3.5 h-3.5 text-c3con-gold-400/80 shrink-0" />
+                      <span className="truncate">{ticketResult.requester_name}</span>
+                    </span>
+                  </div>
+
+                  <div>
+                    <span className="text-slate-500 block text-[11px] uppercase tracking-wider font-semibold">
+                      Tempo Esperado de Conclusão
+                    </span>
+                    <div className="mt-1">
+                      {ticketResult.status === 'resolvido' || ticketResult.status === 'fechado' ? (
+                        <span className="text-emerald-400 font-semibold text-xs flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                          <span>
+                            {ticketResult.resolution_time_minutes != null
+                              ? `Concluído em ${formatMinutesToDuration(ticketResult.resolution_time_minutes)}`
+                              : 'Chamado Concluído'}
+                          </span>
+                        </span>
+                      ) : ticketResult.avg_time_hours != null && ticketResult.expected_resolution_at ? (
+                        <div className="text-slate-200 font-medium text-xs flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-c3con-gold-400 shrink-0" />
+                          <span>
+                            {formatDate(ticketResult.expected_resolution_at)}
+                            <span className="text-slate-400 text-[11px] ml-1 font-mono">
+                              (~{ticketResult.avg_time_hours}h)
+                            </span>
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="text-slate-300 font-medium text-xs flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          <span>Em triagem inicial (~24h médio)</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Problem Description */}
+                <div>
+                  <span className="text-[11px] text-slate-500 uppercase tracking-wider font-semibold block mb-1.5">
+                    Problema Relatado
+                  </span>
+                  <div className="p-3.5 bg-slate-950/70 rounded-xl border border-slate-800 text-xs text-slate-300 leading-relaxed max-h-36 overflow-y-auto whitespace-pre-wrap">
+                    {ticketResult.description}
+                  </div>
+                </div>
+
+                {/* Timestamps Footer */}
+                <div className="grid grid-cols-2 gap-3 text-[11px] text-slate-500 pt-1 border-t border-slate-800/60">
                   <div className="flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5 text-slate-500" />
-                    <span>Aberto em: {formatDateShort(ticketResult.created_at)}</span>
+                    <span>Aberto em: {formatDate(ticketResult.created_at)}</span>
                   </div>
                   <div className="flex items-center gap-1.5 justify-end">
                     <Sparkles className="w-3.5 h-3.5 text-c3con-gold-500/70" />
-                    <span>Última atualização: {formatDateShort(ticketResult.updated_at)}</span>
+                    <span>Atualizado: {formatDate(ticketResult.updated_at)}</span>
                   </div>
                 </div>
               </div>

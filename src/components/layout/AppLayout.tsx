@@ -12,14 +12,18 @@ import {
   X,
   ShieldCheck,
   UserCheck,
+  Clock,
+  KeyRound,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Badge } from '../ui/Badge';
+import { ChangePasswordModal } from '../modals/ChangePasswordModal';
 
 export const AppLayout: React.FC = () => {
   const { profile, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -41,6 +45,11 @@ export const AppLayout: React.FC = () => {
 
   const adminNavItems = [
     {
+      to: '/app/sla',
+      label: 'Gestão de SLA',
+      icon: Clock,
+    },
+    {
       to: '/app/aplicacoes',
       label: 'Aplicações',
       icon: Layers,
@@ -53,7 +62,7 @@ export const AppLayout: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
+    <div className="min-h-screen md:h-screen md:overflow-hidden bg-slate-50 flex flex-col md:flex-row">
       {/* Mobile Topbar */}
       <header className="md:hidden bg-c3con-dark-900 text-white px-4 py-3 flex items-center justify-between border-b border-c3con-dark-800 sticky top-0 z-30">
         <Link to="/app/fila" className="flex items-center gap-2.5">
@@ -68,15 +77,15 @@ export const AppLayout: React.FC = () => {
         </button>
       </header>
 
-      {/* Sidebar for Desktop & Mobile drawer */}
+      {/* Sidebar for Desktop & Mobile drawer (Fixed, does not scroll with main content) */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-40 w-64 bg-c3con-dark-900 text-slate-300 flex flex-col border-r border-c3con-dark-800 transition-transform duration-200 ease-in-out md:translate-x-0 md:static md:min-h-screen',
+          'fixed inset-y-0 left-0 z-40 w-64 bg-c3con-dark-900 text-slate-300 flex flex-col border-r border-c3con-dark-800 transition-transform duration-200 ease-in-out md:translate-x-0 md:static md:h-screen md:shrink-0',
           mobileMenuOpen ? 'translate-x-0' : '-translate-x-0 max-md:-translate-x-full'
         )}
       >
         {/* Brand Header */}
-        <div className="p-5 border-b border-c3con-dark-800 flex items-center gap-3">
+        <div className="p-5 border-b border-c3con-dark-800 flex items-center gap-3 shrink-0">
           <img
             src="/LOGO-A.png"
             alt="C3con Soluções"
@@ -88,7 +97,7 @@ export const AppLayout: React.FC = () => {
           </div>
         </div>
 
-        {/* Navigation */}
+        {/* Navigation - Scrollable internally if many items */}
         <div className="flex-1 px-3 py-4 space-y-6 overflow-y-auto">
           <div>
             <p className="px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-2">
@@ -157,20 +166,20 @@ export const AppLayout: React.FC = () => {
             <p className="px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-2">
               Canal Externo
             </p>
-            <a
-              href="/novo-chamado"
+            <Link
+              to="/novo-chamado"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-slate-300 hover:bg-c3con-dark-800 hover:text-white transition-colors"
             >
               <span>Abrir Novo Chamado</span>
               <ExternalLink className="w-3.5 h-3.5 opacity-70" />
-            </a>
+            </Link>
           </div>
         </div>
 
-        {/* User Profile & Signout Footer */}
-        <div className="p-3 border-t border-c3con-dark-800 bg-c3con-dark-950/40">
+        {/* User Profile & Footer */}
+        <div className="p-3 border-t border-c3con-dark-800 bg-c3con-dark-950/40 shrink-0">
           <div className="flex items-center gap-3 p-2 rounded-lg">
             <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-c3con-gold-600 to-c3con-gold-400 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow">
               {profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : 'U'}
@@ -200,19 +209,28 @@ export const AppLayout: React.FC = () => {
                 )}
               </div>
             </div>
-            <button
-              onClick={handleSignOut}
-              title="Sair da conta"
-              className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-c3con-dark-800 rounded-lg transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setPasswordModalOpen(true)}
+                title="Alterar minha senha"
+                className="p-1.5 text-slate-400 hover:text-c3con-gold-400 hover:bg-c3con-dark-800 rounded-lg transition-colors"
+              >
+                <KeyRound className="w-4 h-4" />
+              </button>
+              <button
+                onClick={handleSignOut}
+                title="Sair da conta"
+                className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-c3con-dark-800 rounded-lg transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       </aside>
 
-      {/* Main Content View */}
-      <div className="flex-1 flex flex-col min-w-0">
+      {/* Main Content View (Scrollable area) */}
+      <div className="flex-1 flex flex-col min-w-0 md:h-screen md:overflow-y-auto">
         <main className="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto">
           <Outlet />
         </main>
@@ -225,6 +243,12 @@ export const AppLayout: React.FC = () => {
           className="fixed inset-0 bg-slate-900/60 z-30 md:hidden"
         />
       )}
+
+      {/* Change Password Modal */}
+      <ChangePasswordModal
+        isOpen={passwordModalOpen}
+        onClose={() => setPasswordModalOpen(false)}
+      />
     </div>
   );
 };

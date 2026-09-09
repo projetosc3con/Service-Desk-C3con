@@ -240,6 +240,36 @@ export type Database = {
           },
         ]
       }
+      sla_settings: {
+        Row: {
+          avg_time_hours: number
+          created_at: string
+          description: string | null
+          id: string
+          max_time_hours: number
+          priority: Database["public"]["Enums"]["ticket_priority"]
+          updated_at: string
+        }
+        Insert: {
+          avg_time_hours: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          max_time_hours: number
+          priority: Database["public"]["Enums"]["ticket_priority"]
+          updated_at?: string
+        }
+        Update: {
+          avg_time_hours?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          max_time_hours?: number
+          priority?: Database["public"]["Enums"]["ticket_priority"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tickets: {
         Row: {
           application_id: string
@@ -252,6 +282,7 @@ export type Database = {
           protocol: string
           requester_contact: string | null
           requester_name: string
+          resolution_time_minutes: number | null
           resolved_at: string | null
           status: Database["public"]["Enums"]["ticket_status"]
           triaged_at: string | null
@@ -269,6 +300,7 @@ export type Database = {
           protocol?: string
           requester_contact?: string | null
           requester_name: string
+          resolution_time_minutes?: number | null
           resolved_at?: string | null
           status?: Database["public"]["Enums"]["ticket_status"]
           triaged_at?: string | null
@@ -286,6 +318,7 @@ export type Database = {
           protocol?: string
           requester_contact?: string | null
           requester_name?: string
+          resolution_time_minutes?: number | null
           resolved_at?: string | null
           status?: Database["public"]["Enums"]["ticket_status"]
           triaged_at?: string | null
@@ -335,6 +368,13 @@ export type Database = {
           created_at: string
           updated_at: string
           application_name: string | null
+          requester_name: string
+          description: string
+          priority: Database["public"]["Enums"]["ticket_priority"] | null
+          avg_time_hours: number | null
+          max_time_hours: number | null
+          expected_resolution_at: string | null
+          resolution_time_minutes: number | null
         }[]
       }
     }
@@ -342,7 +382,7 @@ export type Database = {
       ticket_priority: "baixa" | "media" | "alta" | "critica"
       ticket_status:
         | "novo"
-        | "triagem"
+        | "assinado"
         | "em_andamento"
         | "aguardando_cliente"
         | "resolvido"
@@ -372,6 +412,7 @@ export type TicketComment = Tables<"ticket_comments">
 export type TicketStatusHistory = Tables<"ticket_status_history">
 export type KanbanColumn = Tables<"kanban_columns">
 export type KanbanTask = Tables<"kanban_tasks">
+export type SlaSetting = Tables<"sla_settings">
 
 export type TicketStatus = Enums<"ticket_status">
 export type TicketPriority = Enums<"ticket_priority">
