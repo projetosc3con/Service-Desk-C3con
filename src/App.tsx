@@ -12,6 +12,7 @@ import { LoginPage } from './pages/auth/LoginPage';
 import { TicketQueuePage } from './pages/app/TicketQueuePage';
 import { TicketDetailPage } from './pages/app/TicketDetailPage';
 import { KanbanPage } from './pages/app/KanbanPage';
+import { DashboardPage } from './pages/app/DashboardPage';
 import { ApplicationsAdminPage } from './pages/app/ApplicationsAdminPage';
 import { TeamAdminPage } from './pages/app/TeamAdminPage';
 import { SlaAdminPage } from './pages/app/SlaAdminPage';
@@ -41,6 +42,7 @@ export const App: React.FC = () => {
             <Route path="fila" element={<TicketQueuePage />} />
             <Route path="chamados/:id" element={<TicketDetailPage />} />
             <Route path="kanban" element={<KanbanPage />} />
+            <Route path="dashboard" element={<DashboardPage />} />
 
             {/* Admin-only Routes */}
             <Route

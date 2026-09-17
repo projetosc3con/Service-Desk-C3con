@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import {
   Inbox,
   Kanban,
+  LayoutDashboard,
   Layers,
   Users,
   LogOut,
@@ -40,6 +41,11 @@ export const AppLayout: React.FC = () => {
       to: '/app/kanban',
       label: 'Kanban Pessoal',
       icon: Kanban,
+    },
+    {
+      to: '/app/dashboard',
+      label: 'Dashboard',
+      icon: LayoutDashboard,
     },
   ];
 

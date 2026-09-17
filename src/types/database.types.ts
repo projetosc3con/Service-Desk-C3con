@@ -36,6 +36,68 @@ export type Database = {
         }
         Relationships: []
       }
+      dashboard_cards: {
+        Row: {
+          chart_metric: string
+          col_span: number
+          columns_to_show: any
+          created_at: string
+          filter_conditions: any
+          filter_match_type: string
+          group_by_field: string
+          id: string
+          max_col_span: number
+          min_col_span: number
+          position: number
+          title: string
+          updated_at: string
+          user_id: string
+          visualization_type: string
+        }
+        Insert: {
+          chart_metric?: string
+          col_span?: number
+          columns_to_show?: any
+          created_at?: string
+          filter_conditions?: any
+          filter_match_type?: string
+          group_by_field?: string
+          id?: string
+          max_col_span?: number
+          min_col_span?: number
+          position?: number
+          title: string
+          updated_at?: string
+          user_id: string
+          visualization_type?: string
+        }
+        Update: {
+          chart_metric?: string
+          col_span?: number
+          columns_to_show?: any
+          created_at?: string
+          filter_conditions?: any
+          filter_match_type?: string
+          group_by_field?: string
+          id?: string
+          max_col_span?: number
+          min_col_span?: number
+          position?: number
+          title?: string
+          updated_at?: string
+          user_id?: string
+          visualization_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dashboard_cards_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       kanban_columns: {
         Row: {
           color: string | null
@@ -73,11 +135,13 @@ export type Database = {
       }
       kanban_tasks: {
         Row: {
+          archived_at: string | null
           column_id: string
           created_at: string
           description: string | null
           due_date: string | null
           id: string
+          is_archived: boolean
           owner_id: string
           position: number
           ticket_id: string | null
@@ -85,11 +149,13 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          archived_at?: string | null
           column_id: string
           created_at?: string
           description?: string | null
           due_date?: string | null
           id?: string
+          is_archived?: boolean
           owner_id: string
           position?: number
           ticket_id?: string | null
@@ -97,11 +163,13 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          archived_at?: string | null
           column_id?: string
           created_at?: string
           description?: string | null
           due_date?: string | null
           id?: string
+          is_archived?: boolean
           owner_id?: string
           position?: number
           ticket_id?: string | null
